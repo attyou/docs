@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulateur de Rentabilité - Colybike</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f9fafb; color: #333; }
+        .container { background: white; padding: 20px; border-radius: 10px; max-width: 700px; margin: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2, h4 { color: #4CAF50; }
+        label { font-weight: bold; margin-top: 10px; display: block; }
+        input[type='number'], select { width: 95%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; transition: background 0.3s; }
+        button:hover { background-color: #45a049; }
+        .result { padding: 15px; margin-top: 20px; border-radius: 4px; }
+        .result.profit { background: #e7ffe7; border: 1px solid #4CAF50; }
+        .result.loss { background: #ffe7e7; border: 1px solid #f44336; }
+        .advice { margin-top: 10px; padding: 10px; border-radius: 4px; }
+        .advice.positive { background: #e7ffe7; border: 1px solid #4CAF50; color: #2e7d32; }
+        .advice.negative { background: #ffe7e7; border: 1px solid #f44336; color: #c62828; }
+        .hidden { display: none; }
+        .bike-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .bike-row label { width: 30%; }
+        .bike-row input { width: 30%; margin: 0 5px; }
+        .description { background: #f1f1f1; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+        .input-label { font-size: 0.9em; color: #666; text-align: start; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Simulateur de Rentabilité - Colybike</h2>
+
+        <div class="description">
+            <p>Ce simulateur calcule la rentabilité en fonction des paramètres saisis. Le calcul des revenus se base sur : </p>
+            <ul>
+                <li><strong>Revenus Totaux :</strong> Nombre de vélos × Heures d'utilisation × Prix par heure × Taux d'occupation × 30 jours.</li>
+                <li><strong>Bénéfice Net :</strong> Revenus Totaux - Part des partenaires - Coûts fixes.</li>
+            </ul>
+        </div>
+
+        <label for="calculationMode">Mode de calcul :</label>
+        <select id="calculationMode">
+            <option value="average">Moyenne générale</option>
+            <option value="detailed">Par type de vélo</option>
+        </select>
+
+        <div id="averageInputs">
+            <label for="numBikes">Nombre de vélos :</label>
+            <input type="number" id="numBikes" value="500">
+
+            <label for="usageHours">Heures d'utilisation par jour (par vélo) :</label>
+            <input type="number" id="usageHours" value="4">
+
+            <label for="pricePerHour">Prix moyen par heure (€) :</label>
+            <input type="number" id="pricePerHour" value="2">
+        </div>
+
+        <div id="detailedInputs" class="hidden">
+            <h4>Paramètres par type de vélo :</h4>
+            <div class="bike-row">
+                <label>Vélo Classique :</label>
+                <div>
+                    <div class="input-label">Nombre</div>
+                    <input type="number" class="bikeCount" data-type="Vélo Classique" value="150" placeholder="Nombre de vélos">
+                </div>
+                <div>
+                    <div class="input-label">Prix/h (€)</div>
+                    <input type="number" class="bikePrice" value="2" placeholder="Prix par heure (€)">
+                </div>
+            </div>
+            <div class="bike-row">
+                <label>Trottinette Électrique :</label>
+                <div>
+                    <div class="input-label">Nombre</div>
+                    <input type="number" class="bikeCount" data-type="Trottinette Électrique" value="150" placeholder="Nombre de trottinettes">
+                </div>
+                <div>
+                    <div class="input-label">Prix/h (€)</div>
+                    <input type="number" class="bikePrice" value="1.5" placeholder="Prix par heure (€)">
+                </div>
+            </div>
+            <div class="bike-row">
+                <label>Vélo Cargo :</label>
+                <div>
+                    <div class="input-label">Nombre</div>
+                    <input type="number" class="bikeCount" data-type="Vélo Cargo" value="100" placeholder="Nombre de vélos">
+                </div>
+                <div>
+                    <div class="input-label">Prix/h (€)</div>
+                    <input type="number" class="bikePrice" value="3" placeholder="Prix par heure (€)">
+                </div>
+            </div>
+            <div class="bike-row">
+                <label>Vélo Longtail :</label>
+                <div>
+                    <div class="input-label">Nombre</div>
+                    <input type="number" class="bikeCount" data-type="Vélo Longtail" value="100" placeholder="Nombre de vélos">
+                </div>
+                <div>
+                    <div class="input-label">Prix/h (€)</div>
+                    <input type="number" class="bikePrice" value="2.5" placeholder="Prix par heure (€)">
+                </div>
+            </div>
+
+            <label for="usageHoursDetailed">Heures d'utilisation par jour :</label>
+            <input type="number" id="usageHoursDetailed" value="4">
+        </div>
+
+        <label for="occupationRate">Taux d'occupation (%) :</label>
+        <input type="number" id="occupationRate" value="70">
+
+        <label for="partnerCommission">Commission des Partenaires (%) :</label>
+        <input type="number" id="partnerCommission" value="85">
+
+        <label for="fixedCosts">Coûts Fixes Mensuels (€) :</label>
+        <input type="number" id="fixedCosts" value="4530">
+
+        <button id="calculate">Calculer la Rentabilité</button>
+
+        <div class="result" id="result"></div>
+        <div class="advice" id="advice"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#calculationMode').change(function() {
+                if ($(this).val() === 'detailed') {
+                    $('#averageInputs').addClass('hidden');
+                    $('#detailedInputs').removeClass('hidden');
+                } else {
+                    $('#averageInputs').removeClass('hidden');
+                    $('#detailedInputs').addClass('hidden');
+                }
+            });
+
+            $('#calculate').click(function() {
+                const occupationRate = parseFloat($('#occupationRate').val()) / 100;
+                const partnerCommission = parseFloat($('#partnerCommission').val());
+                const fixedCosts = parseFloat($('#fixedCosts').val());
+
+                let revenue = 0;
+
+                if ($('#calculationMode').val() === 'average') {
+                    const numBikes = parseFloat($('#numBikes').val());
+                    const usageHours = parseFloat($('#usageHours').val());
+                    const pricePerHour = parseFloat($('#pricePerHour').val());
+                    revenue = numBikes * usageHours * pricePerHour * 30 * occupationRate;
+                } else {
+                    const usageHoursDetailed = parseFloat($('#usageHoursDetailed').val());
+                    $('.bike-row').each(function() {
+                        const count = parseFloat($(this).find('.bikeCount').val());
+                        const pricePerHour = parseFloat($(this).find('.bikePrice').val());
+                        revenue += count * usageHoursDetailed * pricePerHour * 30 * occupationRate;
+                    });
+                }
+
+                const partnerShare = (partnerCommission / 100) * revenue;
+                const colybikeRevenue = revenue - partnerShare;
+                const netProfit = colybikeRevenue - fixedCosts;
+
+                const formatNumber = (num) => num.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+
+                const resultClass = netProfit >= 0 ? 'profit' : 'loss';
+                const adviceMessage = netProfit >= 0 
+                    ? 'Félicitations ! Votre projet est rentable.' 
+                    : "Attention, votre projet n'est pas rentable. Envisagez de réduire les coûts fixes, d'augmenter le taux d'occupation ou de négocier une commission plus basse avec les partenaires.";
+                const adviceClass = netProfit >= 0 ? 'positive' : 'negative';
+
+                $('#result').attr('class', `result ${resultClass}`).html(
+                    `<strong>Résultats :</strong><br>
+                    Revenus Totaux : ${formatNumber(revenue)}<br>
+                    Part des partenaires : ${formatNumber(partnerShare)}<br>
+                    Revenus Colybike : ${formatNumber(colybikeRevenue)}<br>
+                    Bénéfice Net : <strong>${formatNumber(netProfit)}</strong>`
+                );
+
+                $('#advice').attr('class', `advice ${adviceClass}`).text(adviceMessage);
+            });
+        });
+    </script>
+</body>
+</html>
